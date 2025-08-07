@@ -32,7 +32,7 @@ static int base64_decode_lut[123] = {
 
 static int base64_padding[3] = {0, 2, 1};
 
-char *base64_encode_b64ch(char* bin, long* text_len, long* text_size, char* buffer){
+char* base64_encode_b64ch(char* bin, long* text_len, long* text_size, char* buffer){
 	int padding = *text_len % 3;
 	long block_size = (*text_size + ((*text_size % 6) > 0 ? 6 - (*text_size % 6) : 0)) / 6;
 	char* b64_text = (char*)malloc((block_size * sizeof(char)) + base64_padding[padding] + 1);
@@ -46,7 +46,7 @@ char *base64_encode_b64ch(char* bin, long* text_len, long* text_size, char* buff
 	return b64_text;
 }
 
-char *base64_encode(char* text){
+char* base64_encode(char* text){
 	char buffer[8];
 	long text_len = strlen(text);
 	long text_size = text_len * 8, n, j;
@@ -65,7 +65,7 @@ char *base64_encode(char* text){
 	return base64_encode_b64ch(bin, &text_len, &text_size, buffer);
 }
 
-char *base64_encode_file(FILE *file){
+char* base64_encode_file(FILE *file){
 	char buffer[8];
 	fseek(file, 0, SEEK_END);
 	long text_len = ftell(file);
@@ -88,7 +88,7 @@ char *base64_encode_file(FILE *file){
 	return base64_encode_b64ch(bin, &text_len, &text_size, buffer);;
 }
 
-char *base64_decode_b64ch(char* b64_text){
+char* base64_decode_b64ch(char* b64_text){
 	char buffer[8];
 	long text_len = strlen(b64_text);
 	check_padding:
@@ -109,7 +109,7 @@ char *base64_decode_b64ch(char* b64_text){
 	return bin;
 }
 
-char *base64_decode(char* b64_text){
+char* base64_decode(char* b64_text){
 	char buffer[8];
 	char *bin = base64_decode_b64ch(b64_text);
 	long data_len = strlen(bin) >> 3;
