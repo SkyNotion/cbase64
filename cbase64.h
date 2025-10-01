@@ -1,12 +1,11 @@
 #ifndef CBASE64_H
 #define CBASE64_H
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
 
-static char base64_encode_lut[64] = {
+const char base64_encode_lut[64] = {
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 	'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -17,7 +16,7 @@ static char base64_encode_lut[64] = {
 	'4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-static int base64_decode_lut[123] = {
+const unsigned char base64_decode_lut[123] = {
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -31,114 +30,44 @@ static int base64_decode_lut[123] = {
 	40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
 };
 
-static int base64_padding[3] = {0, 2, 1};
+const unsigned char base64_padding[3] = {0, 2, 1};
 
-char* base64_encode_b64ch(char* bin, size_t* text_len, size_t* text_size, char* buffer){
-	int padding = *text_len % 3;
-	size_t block_size = (*text_size + ((*text_size % 6) > 0 ? 6 - (*text_size % 6) : 0)) / 6;
-	size_t b64_text_len = (block_size * sizeof(char)) + base64_padding[padding] + 1;
-	char* b64_text = (char*)malloc(b64_text_len);
-	for(size_t i = 0;i < block_size;i++){
-		memset(buffer, '0', 8);
-		memcpy(&buffer[2], &bin[i*6], (*text_size - (i * 6)) < 6 ? (*text_size - (i * 6)): 6);
-		b64_text[i] = base64_encode_lut[strtol(buffer, NULL, 2)];
-	}
-	memset(&b64_text[block_size], '=', base64_padding[padding]);
-	b64_text[b64_text_len - 1] = '\0';
-	free(bin);
-	return b64_text;
+char* base64_encode(char* data, size_t data_sz){
+	int padding = strlen(data) % 3;
+    int rem = (data_sz <<= 3) % 6;
+    data_sz = (data_sz + (rem == 0 ? 0 : 6 - rem)) / 6;
+    char* base64_text = (char*)malloc((data_sz * sizeof(char)) + base64_padding[padding] + 1);
+    size_t idx = 0, pos = 0;
+    do{
+        base64_text[idx++] = base64_encode_lut[data[pos++] >> 2];
+        base64_text[idx++] = base64_encode_lut[(data[pos] >> 4) | ((data[pos - 1] << 4) & 0x3f)];
+        pos++;
+        base64_text[idx++] = base64_encode_lut[(data[pos] >> 6) | ((data[pos - 1] << 2) & 0x3f)];
+        base64_text[idx++] = base64_encode_lut[data[pos++] & 0x3f];
+    }while(idx < data_sz);
+    memset(&base64_text[data_sz], '=', base64_padding[padding]);
+    base64_text[data_sz + base64_padding[padding]] = '\0';
+    return base64_text;
 }
 
-char* base64_encode(char* text){
-	char buffer[8];
-	size_t text_len = strlen(text);
-	size_t text_size = text_len * 8, n, j;
-	char *bin = (char*)malloc(text_size);
-	for(size_t i = 0;i < text_len;i++){
-		memset(buffer, '0', 8);
-		n = (int)text[i],
-		j = 7;
-		do{
-			buffer[j] = n % 2 == 1 ? '1' : '0';
-			n >>= 1;
-			j--;
-		}while(n > 0);
-		memcpy(&bin[i*8], buffer, 8);
+char* base64_decode(char* base64_text){
+    size_t text_len = strlen(base64_text);
+check_padding:
+	if(base64_text[text_len - 1] == '='){
+		text_len--; 
+		goto check_padding;
 	}
-	return base64_encode_b64ch(bin, &text_len, &text_size, buffer);
-}
-
-char* base64_encode_file(FILE *file){
-	char buffer[8];
-	fseek(file, 0, SEEK_END);
-	size_t text_len = ftell(file);
-	size_t text_size = text_len * 8;
-	char *bin = (char*)malloc(text_size);
-	fseek(file, 0, SEEK_SET);
-	int ch, x = 0, j;
-	while((ch = fgetc(file)) != EOF){
-		memset(buffer, '0', 8);
-		j = 7;
-		do{
-			buffer[j] = ch % 2 == 1 ? '1' : '0';
-			ch >>= 1;
-			j--;
-		}while(ch > 0);
-		memcpy(&bin[x*8], buffer, 8);
-		x++;
-	}
-	fclose(file);	
-	return base64_encode_b64ch(bin, &text_len, &text_size, buffer);
-}
-
-char* base64_decode_b64ch(char* b64_text){
-	char buffer[8];
-	size_t text_len = strlen(b64_text);
-	check_padding:
-		if(b64_text[text_len - 1] == '='){text_len--; goto check_padding;}
-	int n, j;
-	size_t bin_len = text_len * 6;
-	char* bin = (char*)malloc(bin_len + 1);
-	for(size_t i = 0;i < text_len;i++){
-		memset(buffer, '0', 8);
-		n = base64_decode_lut[(int)b64_text[i]],
-		j = 7;
-		do{
-			buffer[j] = n % 2 == 1 ? '1' : '0';
-			n >>= 1;
-			j--;
-		}while(n > 0);
-		memcpy(&bin[i*6], &buffer[2], 6);
-	}
-	bin[bin_len] = '\0';
-	return bin;
-}
-
-char* base64_decode(char* b64_text){
-	char buffer[8];
-	char *bin = base64_decode_b64ch(b64_text);
-	size_t text_len = strlen(bin) >> 3;
-	char *text = (char*)malloc(text_len + 1);
-	for(size_t i = 0;i < text_len;i++){
-		memcpy(buffer, &bin[i*8], 8);
-		text[i] = (char)strtol(buffer, NULL, 2);
-	}
-	text[text_len] = '\0';
-	free(bin);
-	return text;
-}
-
-int base64_decode_file(char* b64_text, FILE* file){
-	char buffer[8];
-	char *bin = base64_decode_b64ch(b64_text);
-	size_t data_len = strlen(bin) >> 3;
-	for(size_t i = 0;i < data_len;i++){
-		memcpy(buffer, &bin[i*8], 8);
-		fputc(strtol(buffer, NULL, 2), file);
-	}
-	free(bin);
-	fclose(file);
-	return 0;
+	size_t text_sz = (text_len * 6) / 8;
+    size_t idx = 0, pos = 0;
+    char* data = (char*)malloc(text_sz + 1);
+    do{
+        data[idx++] = (base64_decode_lut[base64_text[pos]] << 2) | (base64_decode_lut[base64_text[++pos]] >> 4);
+        data[idx++] = (base64_decode_lut[base64_text[pos]] << 4) | (base64_decode_lut[base64_text[++pos]] >> 2);
+        data[idx++] = (base64_decode_lut[base64_text[pos]] << 6) | base64_decode_lut[base64_text[++pos]];
+        pos++;
+    }while(idx < text_sz);
+    data[text_sz] = '\0';
+    return data;
 }
 
 #endif
