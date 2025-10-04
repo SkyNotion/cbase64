@@ -61,10 +61,12 @@ check_padding:
     size_t idx = 0, pos = 0;
     char* data = (char*)malloc(text_sz + 1);
     do{
-        data[idx++] = (base64_decode_lut[base64_text[pos]] << 2) | (base64_decode_lut[base64_text[++pos]] >> 4);
-        data[idx++] = (base64_decode_lut[base64_text[pos]] << 4) | (base64_decode_lut[base64_text[++pos]] >> 2);
-        data[idx++] = (base64_decode_lut[base64_text[pos]] << 6) | base64_decode_lut[base64_text[++pos]];
+        data[idx++] = (base64_decode_lut[base64_text[pos]] << 2) | (base64_decode_lut[base64_text[pos + 1]] >> 4);
         pos++;
+        data[idx++] = (base64_decode_lut[base64_text[pos]] << 4) | (base64_decode_lut[base64_text[pos + 1]] >> 2);
+        pos++;
+        data[idx++] = (base64_decode_lut[base64_text[pos]] << 6) | base64_decode_lut[base64_text[pos + 1]];
+        pos += 2;
     }while(idx < text_sz);
     data[text_sz] = '\0';
     return data;
