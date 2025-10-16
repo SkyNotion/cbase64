@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <stddef.h>
 
 const char base64_encode_lut[64] = {
@@ -16,7 +17,7 @@ const char base64_encode_lut[64] = {
 	'4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-const unsigned char base64_decode_lut[123] = {
+const uint8_t base64_decode_lut[123] = {
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -30,9 +31,9 @@ const unsigned char base64_decode_lut[123] = {
 	40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
 };
 
-const unsigned char base64_padding[3] = {0, 2, 1};
+const uint8_t base64_padding[3] = {0, 2, 1};
 
-char* base64_encode(char* data, size_t data_sz){
+char* base64_encode(uint8_t* data, size_t data_sz){
 	int padding = strlen(data) % 3;
     int rem = (data_sz <<= 3) % 6;
     data_sz = (data_sz + (rem == 0 ? 0 : 6 - rem)) / 6;
@@ -50,7 +51,7 @@ char* base64_encode(char* data, size_t data_sz){
     return base64_text;
 }
 
-char* base64_decode(char* base64_text){
+uint8_t* base64_decode(char* base64_text){
     size_t text_len = strlen(base64_text);
 check_padding:
 	if(base64_text[text_len - 1] == '='){
@@ -59,7 +60,7 @@ check_padding:
 	}
 	size_t text_sz = (text_len * 6) / 8;
     size_t idx = 0, pos = 0;
-    char* data = (char*)malloc(text_sz + 1);
+    uint8_t* data = (uint8_t*)malloc(text_sz + 1);
     do{
         data[idx++] = (base64_decode_lut[base64_text[pos]] << 2) | (base64_decode_lut[base64_text[pos + 1]] >> 4);
         pos++;
