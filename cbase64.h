@@ -34,10 +34,10 @@ const static uint8_t base64_decode_lut[123] = {
 const static uint8_t base64_padding[3] = {0, 2, 1};
 
 char* base64_encode(uint8_t* data, size_t data_sz){
-	int padding = strlen(data) % 3;
-    int rem = (data_sz <<= 3) % 6;
-    data_sz = (data_sz + (rem == 0 ? 0 : 6 - rem)) / 6;
-    char* base64_text = (char*)malloc((data_sz * sizeof(char)) + base64_padding[padding] + 1);
+	uint8_t padding = data_sz % 3;
+    uint8_t rem = (data_sz <<= 3) % 6;
+    data_sz = (data_sz + ((6 - rem) % 6)) / 6;
+    char* base64_text = (char*)malloc(sizeof(char) + (data_sz + base64_padding[padding] + 1 + ((4 - (data_sz % 4)) % 4)));
     size_t idx = 0, pos = 0;
     do{
         base64_text[idx++] = base64_encode_lut[data[pos++] >> 2];
@@ -60,7 +60,7 @@ check_padding:
 	}
 	size_t text_sz = (text_len * 6) / 8;
     size_t idx = 0, pos = 0;
-    uint8_t* data = (uint8_t*)malloc(text_sz + 1);
+    uint8_t* data = (uint8_t*)malloc(text_sz + 1 + ((3 - (text_sz % 3)) % 3));
     do{
         data[idx++] = (base64_decode_lut[base64_text[pos]] << 2) | (base64_decode_lut[base64_text[pos + 1]] >> 4);
         pos++;
