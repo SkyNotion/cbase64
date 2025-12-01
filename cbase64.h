@@ -1,12 +1,12 @@
-#ifndef CBASE64_H
-#define CBASE64_H
+#ifndef __CBASE64_H
+#define __CBASE64_H
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stddef.h>
 
-const char base64_encode_lut[64] = {
+const static char base64_encode_lut[64] = {
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 	'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
 	'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -17,7 +17,7 @@ const char base64_encode_lut[64] = {
 	'4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-const uint8_t base64_decode_lut[123] = {
+const static uint8_t base64_decode_lut[123] = {
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
 	255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
@@ -31,7 +31,7 @@ const uint8_t base64_decode_lut[123] = {
 	40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
 };
 
-const uint8_t base64_padding[3] = {0, 2, 1};
+const static uint8_t base64_padding[3] = {0, 2, 1};
 
 char* base64_encode(uint8_t* data, size_t data_sz){
 	int padding = strlen(data) % 3;
